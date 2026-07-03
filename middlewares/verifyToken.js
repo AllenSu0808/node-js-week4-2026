@@ -20,7 +20,30 @@ const jwt = require('jsonwebtoken');
  * @param {import('express').NextFunction} next
  */
 const verifyToken = function (req, res, next) {
-  /* 作答區 */
+  const authorization = req.headers.authorization;
+
+  // 檢查 Authorization header 是否存在且符合 Bearer <token> 格式
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    return res.status(401).json({
+      status: 'false',
+      message: '請先登入'
+    });
+  }
+
+  // 從 Authorization header 中提取 token
+  const token = authorization.slice(7);
+
+  try {
+    // 驗證 token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      status: 'false',
+      message: 'Token 無效或已過期'
+    });
+  }
 };
 
 module.exports = verifyToken;
